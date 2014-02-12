@@ -117,7 +117,8 @@ function hrabsence_civicrm_entityTypes(&$entityTypes) {
  * @param array $apiRequest
  */
 function hrabsence_civicrm_apiWrappers(&$wrappers, $apiRequest) {
-  if (strtolower($apiRequest['entity']) == 'activity' && strtolower($apiRequest['action']) == 'get') {
+  $action = strtolower($apiRequest['action']);
+  if (strtolower($apiRequest['entity']) == 'activity' && ($action == 'get' || $action == 'getabsences')) {
     $wrappers[] = new CRM_HRAbsence_AbsenceRangeOption();
   }
 }
@@ -141,9 +142,9 @@ function hrabsence_civicrm_navigationMenu( &$params ) {
     'child' =>  array (
       $maxKey+2 => array (
         'attributes' => array (
-          'label'      => 'Absences',
-          'name'       => 'absences',
-          'url'        => null,
+          'label'      => ts('My Absences'),
+          'name'       => 'My Absences',
+          'url'        => 'civicrm/absences',
           'permission' => 'access HRAbsences',
           'operator'   => null,
           'separator'  => 1,
@@ -211,6 +212,7 @@ function hrabsence_civicrm_navigationMenu( &$params ) {
     ) 
   );
 
+  $maxKey_child = 0;
   $absenceType = CRM_HRAbsence_BAO_HRAbsenceType::getActivityTypes();
   if (!empty($absenceType)) {
     $maxKey_child = $maxKey+7;
@@ -236,7 +238,7 @@ function hrabsence_civicrm_navigationMenu( &$params ) {
   }
 
   $reportParent = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Navigation', 'Reports', 'id', 'name');
-  $params[$reportParent]['child'][1] = array(
+  $params[$reportParent]['child'][$maxKey_child+1] = array(
     'attributes' => array(
       'label' => 'Absence Report',
       'name' => 'absenceReport',
@@ -249,7 +251,6 @@ function hrabsence_civicrm_navigationMenu( &$params ) {
       'active' => 1,
     ),
   );
-
 }
 
 function hrabsence_civicrm_buildForm($formName, &$form) {
