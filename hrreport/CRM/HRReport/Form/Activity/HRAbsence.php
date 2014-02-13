@@ -624,7 +624,7 @@ GROUP BY civicrm_activity_id {$this->_having} {$this->_orderBy} {$this->_limit}"
     $this->buildRows($sql, $rows);
 
     // format result set.
-    $this->formatDisplay($rows);
+    $this->formatDisplay($rows, FALSE);
 
     // assign variables to templates
     $this->doTemplateAssignment($rows);
@@ -786,7 +786,7 @@ GROUP BY source_record_id";
               $cid = $rows[$rowNum]['civicrm_contact_contact_source_id'];
             }
 
-            $url = CRM_Utils_System::url('civicrm/absences/set',
+            $url = CRM_Utils_System::url('civicrm/absence/set',
               'reset=1&action=view&aid=' . $rows[$rowNum]['civicrm_activity_id'],
               $this->_absoluteUrl
             );
