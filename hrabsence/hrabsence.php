@@ -57,7 +57,7 @@ function hrabsence_civicrm_install() {
     array(
       'label'      => 'Absence Report',
       'name'       => 'absence_report',
-      'url'        => 'civicrm/report/list?grp=Absence&reset=1',
+      'url'        => 'civicrm/report/list?grp=absence&reset=1',
     ),
     array(
       'label'      => 'Manage Entitlements',
@@ -159,17 +159,17 @@ function hrabsence_civicrm_entityTypes(&$entityTypes) {
   $entityTypes[] = array(
     'name' => 'HRAbsenceType',
     'class' => 'CRM_HRAbsence_DAO_HRAbsenceType',
-    'table' => 'civicrm_absence_type',
+    'table' => 'civicrm_hrabsence_type',
   );
    $entityTypes[] = array(
     'name' => 'HRAbsencePeriod',
     'class' => 'CRM_HRAbsence_DAO_HRAbsencePeriod',
-    'table' => 'civicrm_absence_period',
+    'table' => 'civicrm_hrabsence_period',
   );
   $entityTypes[] = array(
     'name' => 'HRAbsenceEntitlement',
     'class' => 'CRM_HRAbsence_DAO_HRAbsenceEntitlement',
-    'table' => 'civicrm_absence_entitlement',
+    'table' => 'civicrm_hrabsence_entitlement',
   );
 }
 
@@ -186,6 +186,26 @@ function hrabsence_civicrm_apiWrappers(&$wrappers, $apiRequest) {
   }
 }
 
+/**
+ * Implementation of hook_civicrm_tabs
+ */
+function hrabsence_civicrm_tabs(&$tabs, $contactID) {
+  $contactType = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $contactID, 'contact_type', 'id');
+  if ($contactType != 'Individual') {
+    return;
+  }
+
+  CRM_HRAbsence_Page_EmployeeAbsencePage::registerResources($contactID);
+  $tabs[] = array(
+    'id'    => 'absenceTab',
+    'url'   =>  CRM_Utils_System::url( 'civicrm/absences', array(
+      'cid' => $contactID,
+      'snippet' => 1,
+    )),
+    'title' => ts('Absences'),
+    'weight' => 300
+  );
+}
 
 function hrabsence_civicrm_navigationMenu( &$params ) {
   $absenceMenuItems = array();
