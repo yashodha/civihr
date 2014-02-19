@@ -112,7 +112,6 @@ class CRM_HRReport_Form_Activity_HRAbsenceCalendar extends CRM_Report_Form {
           'absence_date' =>
           array(
             'title' => ts('Absence Date'),
-            'default' => 'this.month',
             'type' => CRM_Utils_Type::T_DATE,
             'operatorType' => CRM_Report_Form::OP_DATE,
           ),
@@ -442,6 +441,15 @@ cc.sort_name as contact_name";
           $day_name = substr(date("D", mktime(0, 0, 0, $dao->month, $dao->day, $dao->year )), 0, -1);
         }
         $absenceCalendar[$dao->year][$dao->month]['contacts'][$dao->contact_id][$dao->day]['day_name'] = $day_name;
+      }
+    }
+
+    //remove those months from calendar report which don't have any absences
+    foreach ($absenceCalendar as $year => $monthlyRecord) {
+      foreach ($monthlyRecord as $month => $record) {
+        if (!array_key_exists('contacts', $record)) {
+          unset($absenceCalendar[$year][$month]);
+        }
       }
     }
 

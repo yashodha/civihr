@@ -29,25 +29,25 @@
   <table class="abempInfo" style="width: auto; border: medium none ! important;">
   {if $contactDataURL AND $permEditContact}
     <tr>
-      <td>Employee </td>
+      <td>{ts}Employee{/ts}</td>
       <td colspan="2">{$form.contacts.html}</td>
     </tr>
   {else}
     <tr>
-      <td>Employee </td>
+      <td>{ts}Employee{/ts}</td>
       <td colspan="2">{$emp_name}</td>
     </tr>
   {/if}
     <tr id="position">
-      <td>Position </td>
+      <td>{ts}Position{/ts}</td>
       <td colspan="2">{$emp_position}</td>
     </tr>
     <tr>
-      <td>Absence Type </td> 
+      <td>{ts}Absence Type{/ts}</td> 
       <td colspan="2">{$absenceType}</td> 
     </tr>
     <tr class="crm-event-manage-eventinfo-form-block-start_date">
-      <td class="label">Dates</td>
+      <td class="label">{ts}Dates{/ts}</td>
       <td>{include file="CRM/common/jcalendar.tpl" elementName=start_date}</td>
       <td>{include file="CRM/common/jcalendar.tpl" elementName=end_date}</td>
     </tr>
@@ -55,8 +55,8 @@
   <table id="tblabsence" class="report">
     <tbody>
       <tr class="tblabsencetitle">
-        <td>Date</td>
-	<td>Absence</td>
+        <td>{ts}Date{/ts}</td>
+        <td>{ts}Absence{/ts}</td>
       </tr>
     </tbody>
   </table>
@@ -129,16 +129,25 @@
       cj("#tblabsence").show();
       cj("#commentDisplay").show();
     }
+    var pubHoliday = {/literal}{$publicHolidays}{literal};
     var d = Math.floor(( Date.parse(end_date) - Date.parse(start_date) ) / 86400000);
     cj('table#tblabsence tbody tr.trabsence').remove();
     var selectedVal = [];
     for (var x = 0; x <= d; x++) {
       var earlierdate = new Date(start_date);
       var absenceDate = earlierdate.toDateString();
-      var startDate = absenceDate.substring(4,7)+' '+earlierdate.getDate()+','+' '+earlierdate.getFullYear()+' ('+absenceDate.substring(0,3)+')';
+      var sDate = absenceDate.substring(4,7)+' '+earlierdate.getDate()+','+' '+earlierdate.getFullYear();
+      if ( sDate in pubHoliday ) {
+        var holidayDes = pubHoliday[sDate];
+        var holidayDesc = ", "+holidayDes;
+        var startDate = absenceDate.substring(4,7)+' '+earlierdate.getDate()+','+' '+earlierdate.getFullYear()+' ('+absenceDate.substring(0,3)+''+holidayDesc+')';
+      }
+      else{
+        var startDate = absenceDate.substring(4,7)+' '+earlierdate.getDate()+','+' '+earlierdate.getFullYear()+' ('+absenceDate.substring(0,3)+')';
+      }
       var abday = absenceDate.substring(0,3);
-      if (abday == 'Sat' || abday == 'Sun') {
-      	var createSelectBox = '<tr class="trabsence" ><td><label id="label_'+x+'" >'+startDate+'</label></td><td><select id="options_'+x+'" class="form-select" disabled="disabled" ><option value=""></option><option value="1">Full Day</option><option value="0.5">Half Day</option></select></td></tr>';
+      if ((abday == 'Sat' || abday == 'Sun') || (sDate in pubHoliday)) {
+        var createSelectBox = '<tr class="trabsence" ><td><label id="label_'+x+'" >'+startDate+'</label></td><td><select id="options_'+x+'" class="form-select" disabled="disabled" ><option value=""></option><option value="1">Full Day</option><option value="0.5">Half Day</option></select></td></tr>';
       }
       else {
       	var createSelectBox = '<tr class="trabsence" ><td><label id="label_'+x+'" >'+startDate+'</label></td><td><select id="options_'+x+'" class="form-select"><option value="1">Full Day</option><option value="0.5">Half Day</option><option value=""></option></select></td></tr>';
@@ -167,10 +176,10 @@
       totalDays = new Number(totalDays) + new Number(selectopt);
     }
     if (totalDays <= 1) {
-      totalDays += ' day';
+      totalDays += ' {/literal}{ts}day{/ts}{literal}';
     }
     else {
-      totalDays += ' days';
+      totalDays += ' {/literal}{ts}days{/ts}{literal}';
     }
     cj('#countD').html(totalDays);
   }
@@ -193,6 +202,7 @@
         var end_date = cj('#end_date_display').val();
         var start_date = cj('#start_date_display').val();
         var difDate = Math.floor(( Date.parse(end_date) - Date.parse(start_date) ) / 86400000);
+        var pubHoliday = {/literal}{$publicHolidays}{literal};
         var param = cj.parseJSON('{}');
         CRM.api('Activity', 'get', {'sequential': 1, 'source_record_id': upActivityId, 'option_sort': 'activity_date_time ASC', 'option.limit': 31},
           {success: function(data) {
@@ -201,16 +211,25 @@
             param[val]=value.duration;
           });   
 	  var x=0;
-	  var selectopt;
-	  var totalDays=0;  
-	  cj.each(param, function(key, value) {
-	    var datepicker = key;
-	    var parms = datepicker.split("-");
-	    var subpar2 = parms[2].substring(0,3);
-	    var joindate = new Date(parms[1]+"/"+subpar2+"/"+parms[0]);
-	    var absenceDate = joindate.toDateString();
-	    var abdate = absenceDate.substring(4,7)+' '+joindate.getDate()+','+' '+joindate.getFullYear()+' ('+absenceDate.substring(0,3)+')';
-	    var abday = absenceDate.substring(0,3);
+          var selectopt;
+          var totalDays=0;
+          cj.each(param, function(key, value) {
+            var datepicker = key;
+            var parms = datepicker.split("-");
+            var subpar2 = parms[2].substring(0,3);
+            var joindate = new Date(parms[1]+"/"+subpar2+"/"+parms[0]);
+            var absenceDate = joindate.toDateString();
+            var abdate = absenceDate.substring(4,7)+' '+joindate.getDate()+','+' '+joindate.getFullYear()+' ('+absenceDate.substring(0,3)+')';
+            var abday = absenceDate.substring(0,3);
+            var sDate = absenceDate.substring(4,7)+' '+joindate.getDate()+','+' '+joindate.getFullYear();
+            if ( sDate in pubHoliday ) {
+              var holidayDes = pubHoliday[sDate];
+              var holidayDesc = ", "+holidayDes;
+              var abdate = absenceDate.substring(4,7)+' '+joindate.getDate()+','+' '+joindate.getFullYear()+' ('+absenceDate.substring(0,3)+''+holidayDesc+')';
+            }
+            else {
+              var abdate = absenceDate.substring(4,7)+' '+joindate.getDate()+','+' '+joindate.getFullYear()+' ('+absenceDate.substring(0,3)+')';
+            }
 	    var createSelectBox = '<tr class="trabsence"><td><label id="label_'+x+'" >'+abdate+'</label></td><td><select id="options_'+x+'" class="form-select"><option value="1">Full Day</option><option value="0.5">Half Day</option><option value=""></option></select></td></tr>';
             cj('form#AbsenceRequest table#tblabsence tbody').append(createSelectBox);
             if (value==240) {
@@ -230,10 +249,10 @@
 	    x = new Number(x) + 1;
  	  });
           if (totalDays <= 1) {
-	    totalDays += ' day';
+	    totalDays += ' {/literal}{ts}day{/ts}{literal}';
           }
           else {
-            totalDays += ' days';
+            totalDays += ' {/literal}{ts}days{/ts}{literal}';
 	  }
 	  cj('#countD').html(totalDays);
         }
@@ -294,7 +313,7 @@
 });
 
   var countDays = 0;
-  cj('#tblabsence tbody:last').after('<tr class="tblabsencetitle"><td>Total</td><td id="countD">'+countDays+'</td></tr>');
+  cj('#tblabsence tbody:last').after('<tr class="tblabsencetitle"><td>{/literal}{ts}Total{/ts}{literal}</td><td id="countD">'+countDays+'</td></tr>');
   cj(document).on('change','#tblabsence select', function(){
     var end_date = cj('#end_date_display').val();
     var start_date = cj('#start_date_display').val();
@@ -305,10 +324,10 @@
       totalDays = new Number(totalDays) + new Number(selectopt);
     }
     if (totalDays <= 1) {
-      totalDays += ' day';
+      totalDays += ' {/literal}{ts}day{/ts}{literal}';
     }
     else {
-      totalDays += ' days';
+      totalDays += ' {/literal}{ts}days{/ts}{literal}';
     }
     cj('#countD').html(totalDays);
   });
