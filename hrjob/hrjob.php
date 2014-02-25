@@ -63,10 +63,10 @@ function hrjob_civicrm_install() {
         $params['name'] = $subTypeName;
         $params['label'] = $sub_type_name;
         CRM_Contact_BAO_ContactType::add($params);
-      } 
+      }
       elseif($subID && $orgSubType[$subTypeName]['is_active']==0) {
         CRM_Contact_BAO_ContactType::setIsActive($orgSubType[$subTypeName]['id'], 1);
-      }    
+      }
     }
   }
 
@@ -216,7 +216,7 @@ function hrjob_civicrm_entityTypes(&$entityTypes) {
   );
 }
 
-function hrjob_civicrm_triggerInfo(&$info, $tableName) {
+/*function hrjob_civicrm_triggerInfo(&$info, $tableName) {
   $info[] = array(
     'table' => array('civicrm_hrjob'),
     'when' => 'after',
@@ -249,7 +249,7 @@ function hrjob_civicrm_triggerInfo(&$info, $tableName) {
       END IF;
     ",
   );
-}
+}*/
 
 /**
  * Implementation of hook_civicrm_permission
@@ -258,11 +258,12 @@ function hrjob_civicrm_triggerInfo(&$info, $tableName) {
  * @return void
  */
 function hrjob_civicrm_permission(&$permissions) {
-  $prefix = ts('CiviHR') . ': '; // name of extension or module
-  $permissions = array(
+  $prefix = ts('CiviHRJob') . ': '; // name of extension or module
+  $permissions += array(
     'access HRJobs' => $prefix . ts('access HRJobs'),
     'edit HRJobs' => $prefix . ts('edit HRJobs'),
     'delete HRJobs' => $prefix . ts('delete HRJobs'),
+    'access own HRJobs' => $prefix . ts('access own HRJobs'),
   );
 }
 
@@ -276,12 +277,18 @@ function hrjob_civicrm_permission(&$permissions) {
  * @return void
  */
 function hrjob_civicrm_alterAPIPermissions($entity, $action, &$params, &$permissions) {
-  $permissions['h_r_job']['get'] = array('access CiviCRM', 'access HRJobs');
+  $session = CRM_Core_Session::singleton();
+  $cid = $session->get('userID');
+  if ($entity == 'h_r_job' && $cid == $params['contact_id'] && $action == 'get') {
+    $permissions['h_r_job']['get'] = array('access own HRJobs');
+  } else {
+    $permissions['h_r_job']['get'] = array('access CiviCRM', 'access HRJobs');
+  }
   $permissions['h_r_job']['create'] = array('access CiviCRM', 'edit HRJobs');
   $permissions['h_r_job']['update'] = array('access CiviCRM', 'edit HRJobs');
   $permissions['h_r_job']['duplicate'] = array('access CiviCRM', 'edit HRJobs');
   $permissions['h_r_job']['delete'] = array('access CiviCRM', 'delete HRJobs');
-  $permissions['HRJob'] = $permissions['h_r_job'];
+  $permissions['CiviHRJob'] = $permissions['h_r_job'];
 }
 
 /**
@@ -312,7 +319,7 @@ function hrjob_getSummaryFields($fresh = FALSE) {
 function hrjob_civicrm_navigationMenu( &$params ) {
     //  Get the maximum key of $params
     $maxKey = ( max( array_keys($params) ) );
- 
+
     $params[15]['child'][$maxKey+1] = array (
       'attributes' => array (
         'label'      => 'Job Import',
@@ -357,4 +364,26 @@ function _hrjob_phpunit_populateDB() {
     CRM_Extension_System::singleton()->getMapper()->keyToBasePath('org.civicrm.hrjob')
       . '/xml/job_summary_install.xml'
   );
+}
+
+/**
+ * Implementation of hook_civicrm_caseTypes
+ *
+ * Generate a list of case-types
+ *
+ * Note: This hook only runs in CiviCRM 4.4+.
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
+ */
+function hrjob_civicrm_caseTypes(&$caseTypes) {
+  _hrjob_civix_civicrm_caseTypes($caseTypes);
+}
+
+/**
+ * Implementation of hook_civicrm_alterSettingsFolders
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
+ */
+function hrjob_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
+  _hrjob_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }

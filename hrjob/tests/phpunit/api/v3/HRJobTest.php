@@ -71,12 +71,33 @@ class api_v3_HRJobTest extends CiviUnitTestCase {
         'location' => 'Home',
         'organization' => 'XYZ Inc',
       ),
+      'api.HRAbsenceType.create' => array(
+        'name' => 'Annual',
+        'title' => 'Annual',
+        'is_active' => 1,
+        'allow_credits' => 0,
+        'allow_debits' => 0,
+      ),
+      'api.HRAbsenceType.create.1' => array(
+        'name' => 'Public',
+        'title' => 'Public',
+        'is_active' => 1,
+        'allow_credits' => 0,
+        'allow_debits' => 0,
+      ),
+      'api.HRAbsenceType.create.2' => array(
+        'name' => 'Sick',
+        'title' => 'Sick',
+        'is_active' => 1,
+        'allow_credits' => 0,
+        'allow_debits' => 0,
+      ),
       'api.HRJobLeave.create' => array(
-        'leave_type' => 'Annual',
+        'leave_type' => 1,
         'leave_amount' => 10,
       ),
       'api.HRJobLeave.create.1' => array(
-        'leave_type' => 'Sick',
+        'leave_type' => 3,
         'leave_amount' => 7
       ),
     );
@@ -86,6 +107,7 @@ class api_v3_HRJobTest extends CiviUnitTestCase {
     parent::tearDown();
     $this->quickCleanup(array(
       'civicrm_hrjob',
+      'civicrm_hrabsence_type',
       'civicrm_hrjob_health',
       'civicrm_hrjob_hour',
       'civicrm_hrjob_leave',
@@ -158,12 +180,12 @@ class api_v3_HRJobTest extends CiviUnitTestCase {
       //assert the creation of multiple leaves
       $this->assertAPISuccess($hrJobResult['api.HRJobLeave.create']);
       foreach ($hrJobResult['api.HRJobLeave.create']['values'] as $key => $hrJobLeaveResult) {
-        $this->assertEquals('Annual', $hrJobLeaveResult['leave_type']);
+        $this->assertEquals(1, $hrJobLeaveResult['leave_type']);
         $this->assertEquals(10, $hrJobLeaveResult['leave_amount']);
       }
       $this->assertAPISuccess($hrJobResult['api.HRJobLeave.create.1']);
       foreach ($hrJobResult['api.HRJobLeave.create.1']['values'] as $key => $hrJobLeaveResult) {
-        $this->assertEquals('Sick', $hrJobLeaveResult['leave_type']);
+        $this->assertEquals(3, $hrJobLeaveResult['leave_type']);
         $this->assertEquals(7, $hrJobLeaveResult['leave_amount']);
       }
     }
@@ -280,69 +302,12 @@ class api_v3_HRJobTest extends CiviUnitTestCase {
     }
   }
 
-  /**
-   * A list of test-cases for the "initial join date" and "final termination date" fields.
-   */
-  function jobSummaryDateTestCases() {
-    $cases = array();
-
-    $cases[] = array(
-      array(),
-      array('start' => '', 'end' => '')
-    );
-    $cases[] = array(
-      array(
-        array('period_start_date' => '', 'period_end_date' => ''),
-      ),
-      array('start' => '', 'end' => '')
-    );
-    $cases[] = array(
-      array(
-        array('period_start_date' => '2012-01-02', 'period_end_date' => ''),
-      ),
-      array('start' => '2012-01-02 00:00:00', 'end' => '')
-    );
-    $cases[] = array(
-      array(
-        array('period_start_date' => '', 'period_end_date' => ''),
-        array('period_start_date' => '2012-01-02', 'period_end_date' => ''),
-        array('period_start_date' => '2011-05-01', 'period_end_date' => ''),
-        array('period_start_date' => '2013-04-01', 'period_end_date' => ''),
-      ),
-      array('start' => '2011-05-01 00:00:00', 'end' => '')
-    );
-    $cases[] = array(
-      array(
-        array('period_start_date' => '', 'period_end_date' => '2012-01-02'),
-      ),
-      array('start' => '', 'end' => '2012-01-02 00:00:00')
-    );
-    $cases[] = array(
-      array(
-        array('period_start_date' => '', 'period_end_date' => '2011-09-02'),
-        array('period_start_date' => '', 'period_end_date' => '2013-01-02'),
-        array('period_start_date' => '', 'period_end_date' => '2012-08-02'),
-        array('period_start_date' => '', 'period_end_date' => ''),
-      ),
-      array('start' => '', 'end' => '2013-01-02 00:00:00')
-    );
-    $cases[] = array(
-      array(
-        array('period_start_date' => '', 'period_end_date' => '2011-09-02'),
-        array('period_start_date' => '', 'period_end_date' => '2013-01-02'),
-        array('period_start_date' => '2009-08-05', 'period_end_date' => '2012-08-02'),
-        array('period_start_date' => '2010-09-01', 'period_end_date' => ''),
-      ),
-      array('start' => '2009-08-05 00:00:00', 'end' => '2013-01-02 00:00:00')
-    );
-    return $cases;
-  }
+  //TODO check for length of employment field value
 
   /**
-   * @dataProvider jobSummaryDateTestCases
    * @param array $jobFixtures list of API calls to make for creating the jobs
    * @param array $expectedDates list of job-summary values that are expected
-   */
+   
   function testJobSummaryDates($jobFixtures, $expectedDates) {
     // Make some noise to ensure we filter correctly
     $this->callAPISuccess('HRJob', 'create', array(
@@ -382,7 +347,7 @@ class api_v3_HRJobTest extends CiviUnitTestCase {
     $this->assertEquals($expectedDates['start'], $result['values'][$result['id']][$fields['Initial_Join_Date']['field']], 'Compare Initial_Join_Date');
     $this->assertEquals($expectedDates['end'], $result['values'][$result['id']][$fields['Final_Termination_Date']['field']], 'Compare Final_Termination_Date');
   }
-
+  */
   // TODO test summary transitions
 
   function testDuplicateWithChange() {

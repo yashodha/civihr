@@ -448,6 +448,7 @@ class GenerateHRData {
       //if Absence (CiviHR) extension in enabled, add the sample data
       $this->addAbsenceEntitlements($cid);
     }
+    $this->addHolidays($cid);
   }
 
 
@@ -978,36 +979,28 @@ class GenerateHRData {
     if (CRM_HRAbsence_BAO_HRAbsencePeriod::getRecordCount($params = array()) != 0) {
       CRM_Core_DAO::executeQuery("DELETE FROM civicrm_hrabsence_period");
     }
+
     // Create a set of absence periods
+    $currentYear = date('Y');
+
+    $years = array();
+    for ($i = 4; $i > 0; $i--) {
+      $years[] = array(
+        'startYear' => $currentYear - ($i - 1),
+        'endYear' => $currentYear - ($i - 2),
+      );
+    }
+
     $periods = array();
-    $periods[] = array(
-      'name' => 'FY2013',
-      'title' => 'FY2013 (Apr 2013 - Mar 2014)',
-      'start_date' => '2013-04-01 00:00:00',
-      'end_date' => '2014-03-31 23:59:59',
-    );
+    foreach ($years as $year) {
+      $periods[] = array(
+        'name' => "FY{$year['startYear']}",
+        'title' => "FY{$year['startYear']} (Apr {$year['startYear']} - Mar {$year['endYear']})",
+        'start_date' => "{$year['startYear']}-04-01 00:00:00",
+        'end_date' => "{$year['endYear']}-03-31 23:59:59",
+      );
+    }
 
-    $periods[] = array(
-      'name' => 'FY2014',
-      'title' => 'FY2014 (Apr 2014 - Mar 2015)',
-      'start_date' => '2014-04-01 00:00:00',
-      'end_date' => '2015-03-31 23:59:59',
-    );
-
-    $periods[] = array(
-      'name' => 'FY2015',
-      'title' => 'FY2015 (Apr 2015 - Mar 2016)',
-      'start_date' => '2015-04-01 00:00:00',
-      'end_date' => '2016-03-31 23:59:59',
-    );
-
-    $periods[] = array(
-      'name' => 'FY2016',
-      'title' => 'FY2016 (Apr 2016 - Mar 2017)',
-      'start_date' => '2016-04-01 00:00:00',
-      'end_date' => '2017-03-31 23:59:59',
-    );
-    
     foreach ($periods as $absencePeriod) {
       civicrm_api3('HRAbsencePeriod', 'create', $absencePeriod);
     }
@@ -1107,10 +1100,37 @@ class GenerateHRData {
       ));
     }
   }
+
+  private function addHolidays($cid) {
+    $publicHolidays = array('18 April','21 April','5 May','26 May','25 August','25 December','26 December');
+    $publicholidays_sub = array('Good Friday','Easter Monday','Early May bank holiday','Spring bank holiday','Summer bank holiday','Christmas Day','Boxing Day');
+    $params = array('sequential' => 1,
+      'name' => 'Public Holiday',
+      'return'=> 'value',              
+    );
+    $activity_id = civicrm_api3('OptionValue', 'getvalue', $params );
+    $holidayId = civicrm_api3('Activity', 'get', array('activity_type_id'=> $activity_id ,));
+    foreach ($holidayId['values'] as $key=>$val) {
+      civicrm_api3('Activity', 'delete', array('id' =>$key ));
+    }
+    $holidayCount = 7;
+    $i = 0;
+    
+    while ($holidayCount --) {
+      $result = civicrm_api3('Activity', 'create',array(
+        'activity_type_id' => $activity_id  ,
+        'activity_date_time' => date("Y-m-d h:i:s", strtotime($publicHolidays[$i])) ,
+        'subject' => $publicholidays_sub[$i],
+        'source_contact_id' => $cid,
+      ));      
+      $i++;      
+    }
+  }
+
 }
 
 $obj1 = new GenerateHRData();
 $obj1->initID();
 $obj1->generate('Organization');
 $obj1->generate('Individual');
-
+CRM_HRJob_Estimator::updateEstimates(); // generator above bypasses API
