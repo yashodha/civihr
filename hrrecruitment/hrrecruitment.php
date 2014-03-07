@@ -220,6 +220,14 @@ function hrrecruitment_civicrm_caseTypes(&$caseTypes) {
   _hrrecruitment_civix_civicrm_caseTypes($caseTypes);
 }
 
+function hrrecruitment_civicrm_entityTypes(&$entityTypes) {
+  $entityTypes[] = array(
+    'name' => 'HRVacancy',
+    'class' => 'CRM_HRRecruitment_DAO_HRVacancy',
+    'table' => 'civicrm_hrvacancy',
+  );
+}
+
 function hrrecruitment_civicrm_navigationMenu( &$params ) {
   $vacanciesMenuItems = array();
   $vacancieStatuses = CRM_Core_OptionGroup::values('vacancy_status');
@@ -231,7 +239,7 @@ function hrrecruitment_civicrm_navigationMenu( &$params ) {
       'attributes' => array(
         'label'      => "{$vacancyStatus}",
         'name'       => "{$vacancyStatus}",
-        'url'        => "civicrm/vacancy/search?reset=1&id={$value}",
+        'url'        => "civicrm/vacancy/search?reset=1&status={$value}",
         'permission' => NULL,
         'operator'   => 'OR',
         'separator'  => NULL,

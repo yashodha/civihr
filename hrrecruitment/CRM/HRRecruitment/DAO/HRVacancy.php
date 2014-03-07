@@ -1,7 +1,7 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.4                                                |
+| CiviHR version 1.3                                                 |
 +--------------------------------------------------------------------+
 | Copyright CiviCRM LLC (c) 2004-2013                                |
 +--------------------------------------------------------------------+
@@ -144,13 +144,13 @@ class CRM_HRRecruitment_DAO_HRVacancy extends CRM_Core_DAO
   /**
    * Vacancy Start Date
    *
-   * @var date
+   * @var timestamp
    */
   public $start_date;
   /**
    * Vacancy End Date
    *
-   * @var date
+   * @var timestamp
    */
   public $end_date;
   /**
@@ -228,15 +228,19 @@ class CRM_HRRecruitment_DAO_HRVacancy extends CRM_Core_DAO
         'status_id' => array(
           'name' => 'status_id',
           'type' => CRM_Utils_Type::T_INT,
+          'title' => ts('Status') ,
+          'pseudoconstant' => array(
+            'optionGroupName' => 'vacancy_status',
+          )
         ) ,
         'start_date' => array(
           'name' => 'start_date',
-          'type' => CRM_Utils_Type::T_DATE,
+          'type' => CRM_Utils_Type::T_TIMESTAMP,
           'title' => ts('Start Date') ,
         ) ,
         'end_date' => array(
           'name' => 'end_date',
-          'type' => CRM_Utils_Type::T_DATE,
+          'type' => CRM_Utils_Type::T_TIMESTAMP,
           'title' => ts('End Date') ,
         ) ,
       );
