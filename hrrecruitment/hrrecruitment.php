@@ -29,7 +29,7 @@ function hrrecruitment_civicrm_install() {
       civicrm_api3('activity_type', 'create', array(
           'weight' => $weight++,
           'name' => $activityType,
-          'label' => ts($activityType),
+          'label' => $activityType,
           'filter' => 1,
           'is_active' => 1,
         )
@@ -76,7 +76,7 @@ function hrrecruitment_civicrm_install() {
     $count++;
     $caseStatusParam = array(
       'option_group_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionGroup', 'case_status', 'id', 'name'),
-      'label' => ts($label),
+      'label' => $label,
       'name' => CRM_Utils_String::munge($label),
       'value' => $count,
       'grouping' => 'Vacancy',
@@ -143,6 +143,30 @@ function hrrecruitment_civicrm_install() {
 }
 
 /**
+ * Implementation of hook_civicrm_postInstall
+ *
+ * Note: This hook only runs in CiviCRM 4.4+.
+ */
+function hrrecruitment_civicrm_postInstall() {
+  $cgDAO = new CRM_Core_DAO_CustomGroup();
+  $cgDAO->extends_entity_column_value = 'Application';
+  $cgDAO->find();
+  $value = civicrm_api3('OptionValue', 'getvalue', array('name' => 'Application', 'return' => 'value'));
+  while ($cgDAO->fetch()) {
+    if ($value) {
+      $cgDAO->extends_entity_column_value = CRM_Core_DAO::VALUE_SEPARATOR . $value['result'] . CRM_Core_DAO::VALUE_SEPARATOR;
+      $cgDAO->save();
+    }
+  }
+
+  //change the profile Type of Aplication
+  if ($ufID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', 'application_profile', 'id', 'name')) {
+    $fieldsType = CRM_Core_BAO_UFGroup::calculateGroupType($ufID, TRUE);
+    CRM_Core_BAO_UFGroup::updateGroupTypes($ufID, $fieldsType);
+  }
+}
+
+/**
  * Implementation of hook_civicrm_uninstall
  */
 function hrrecruitment_civicrm_uninstall() {
@@ -171,7 +195,7 @@ function hrrecruitment_civicrm_uninstall() {
     }
   }
 
-  foreach (array('Application', 'Vacancy') as $cgName) {
+  foreach (array('Application', 'application_case') as $cgName) {
     $customGroup = new CRM_Core_DAO_CustomGroup();
     $customGroup->name = $cgName;
     $customGroup->find(TRUE);
@@ -220,7 +244,7 @@ function hrrecruitment_civicrm_enable() {
     }
   }
 
-  foreach (array('Application', 'Vacancy') as $cgName) {
+  foreach (array('Application', 'application_case') as $cgName) {
     $customGroup = new CRM_Core_DAO_CustomGroup();
     $customGroup->name = $cgName;
     $customGroup->find(TRUE);
@@ -262,7 +286,7 @@ function hrrecruitment_civicrm_disable() {
     }
   }
 
-  foreach (array('Application', 'Vacancy') as $cgName) {
+  foreach (array('Application', 'application_case') as $cgName) {
     $customGroup = new CRM_Core_DAO_CustomGroup();
     $customGroup->name = $cgName;
     $customGroup->find(TRUE);
