@@ -60,6 +60,7 @@ GROUP BY cc.status_id
         'count' => CRM_Utils_Array::value($status['case_status_id'], $stagesCount, 0),
       );
     }
+
     return $caseStatus;
   }
 
